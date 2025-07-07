@@ -6,3 +6,4 @@ vim.g.lazyvim_picker = "fzf"
 -- vim.g.lazyvim_python_lsp = "python-lsp-server"
 -- vim.g.lazyvim_python_lsp = "basedpyright"
 vim.g.lazyvim_python_lsp = "pyright"
+vim.g.autoformat = false
