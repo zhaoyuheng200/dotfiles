@@ -10,13 +10,40 @@ echo ""
 # Install system dependencies
 echo "=== System Dependencies ==="
 if command -v dnf >/dev/null 2>&1; then
-  sudo dnf install -y fzf ripgrep gcc make
+  sudo dnf install -y gcc make
 elif command -v apt >/dev/null 2>&1; then
-  sudo apt install -y fzf ripgrep gcc make
+  sudo apt install -y gcc make
 elif command -v brew >/dev/null 2>&1; then
-  brew install fzf ripgrep gcc make
-else
-  echo "[warn] Unknown package manager. Manually install: fzf ripgrep gcc make"
+  brew install gcc make
+fi
+
+# fzf: use official git installer (works everywhere, includes shell integration)
+if ! command -v fzf >/dev/null 2>&1; then
+  echo "[info] Installing fzf..."
+  git clone --depth 1 https://github.com/junegunn/fzf.git ~/.local/share/fzf
+  ~/.local/share/fzf/install --bin
+fi
+
+# ripgrep: use musl static binary (no glibc dependency)
+if ! command -v rg >/dev/null 2>&1; then
+  echo "[info] Installing ripgrep..."
+  RG_VERSION=$(curl -s https://api.github.com/repos/BurntSushi/ripgrep/releases/latest | grep tag_name | cut -d '"' -f 4)
+  curl -Lo /tmp/rg.tar.gz "https://github.com/BurntSushi/ripgrep/releases/download/${RG_VERSION}/ripgrep-${RG_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+  tar -xzf /tmp/rg.tar.gz -C /tmp
+  mkdir -p ~/.local/bin
+  mv /tmp/ripgrep-*/rg ~/.local/bin/
+  rm -rf /tmp/rg.tar.gz /tmp/ripgrep-*
+fi
+
+# fd: use musl static binary (no glibc dependency)
+if ! command -v fd >/dev/null 2>&1 && ! command -v fdfind >/dev/null 2>&1; then
+  echo "[info] Installing fd..."
+  FD_VERSION=$(curl -s https://api.github.com/repos/sharkdp/fd/releases/latest | grep tag_name | cut -d '"' -f 4)
+  curl -Lo /tmp/fd.tar.gz "https://github.com/sharkdp/fd/releases/download/${FD_VERSION}/fd-${FD_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+  tar -xzf /tmp/fd.tar.gz -C /tmp
+  mkdir -p ~/.local/bin
+  mv /tmp/fd-*/fd ~/.local/bin/
+  rm -rf /tmp/fd.tar.gz /tmp/fd-*
 fi
 
 # Create ~/.config if needed
