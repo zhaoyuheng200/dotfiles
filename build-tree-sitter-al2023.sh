@@ -1,19 +1,23 @@
 #!/bin/bash
 set -e
 
-# Build tree-sitter CLI from source for systems with old glibc
-# where the prebuilt binary fails.
+# Build tree-sitter CLI from source for AL2023 where the prebuilt
+# binary fails due to old glibc.
 
 INSTALL_DIR="$HOME/.local/bin"
 BUILD_DIR=$(mktemp -d)
 trap 'rm -rf "$BUILD_DIR"' EXIT
 
-echo "=== tree-sitter source build ==="
+echo "=== tree-sitter source build (AL2023 workaround) ==="
+
+# Install build dependencies via dnf
+echo "[info] Installing build dependencies..."
+sudo dnf install -y gcc make cmake clang-devel
 
 # Check requirements
 missing=()
 command -v git >/dev/null 2>&1 || missing+=("git")
-command -v cc >/dev/null 2>&1 || missing+=("cc (gcc/clang)")
+command -v cc >/dev/null 2>&1 || missing+=("cc")
 
 if [ ${#missing[@]} -ne 0 ]; then
   echo "[error] Missing required tools: ${missing[*]}"
