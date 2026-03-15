@@ -21,10 +21,11 @@ On older systems, the prebuilt `tree-sitter` binary may fail with:
 tree-sitter: /lib64/libc.so.6: version `GLIBC_2.xx' not found
 ```
 
-Run the build script to compile from source:
+Run the AL2023 workaround script:
 ```bash
-./build-tree-sitter.sh
+./build-tree-sitter-al2023.sh
 ```
 
-This checks for required tools (git, cc), installs cargo/Rust if missing,
-builds tree-sitter from source, and installs it to `~/.local/bin`.
+This installs build dependencies (gcc, make, cmake, clang-devel) via dnf,
+installs cargo/Rust if missing, builds tree-sitter from source, and
+installs it to `~/.local/bin`.
