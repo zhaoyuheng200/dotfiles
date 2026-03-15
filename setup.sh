@@ -7,6 +7,18 @@ echo "=== Dotfiles Setup ==="
 echo "Source: $DOTFILES"
 echo ""
 
+# Install system dependencies
+echo "=== System Dependencies ==="
+if command -v dnf >/dev/null 2>&1; then
+  sudo dnf install -y fzf ripgrep gcc make
+elif command -v apt >/dev/null 2>&1; then
+  sudo apt install -y fzf ripgrep gcc make
+elif command -v brew >/dev/null 2>&1; then
+  brew install fzf ripgrep gcc make
+else
+  echo "[warn] Unknown package manager. Manually install: fzf ripgrep gcc make"
+fi
+
 # Create ~/.config if needed
 mkdir -p ~/.config
 
