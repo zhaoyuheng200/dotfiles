@@ -9,8 +9,15 @@
 active="$1"
 command="$2"
 path="$3"
+title="$4"
 
 formatted_path=$(~/.config/tmux/format_path.sh "$path")
+
+# Build label: "command: title" if title is set and differs from default
+label="$command"
+if [ -n "$title" ] && [ "$title" != "$command" ] && [ "$title" != "$(hostname -s)" ]; then
+  label="${command}: ${title}"
+fi
 
 if [ "$active" = "1" ]; then
   bg=$(tmux show-option -gqv @thm_mauve)
@@ -23,4 +30,4 @@ fi
 LEFT=$'\xee\x82\xb6'
 RIGHT=$'\xee\x82\xb4'
 
-echo "#[fg=${bg},bg=default]${LEFT}#[fg=${fg},bg=${bg}] ${command}  ${formatted_path} #[fg=${bg},bg=default]${RIGHT}"
+echo "#[fg=${bg},bg=default]${LEFT}#[fg=${fg},bg=${bg}] ${label}  ${formatted_path} #[fg=${bg},bg=default]${RIGHT}"
