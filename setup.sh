@@ -7,47 +7,83 @@ echo "=== Dotfiles Setup ==="
 echo "Source: $DOTFILES"
 echo ""
 
-# Install system dependencies
-echo "=== System Dependencies ==="
-if command -v dnf >/dev/null 2>&1; then
-  sudo dnf install -y gcc make
-elif command -v apt >/dev/null 2>&1; then
-  sudo apt install -y gcc make
-elif command -v brew >/dev/null 2>&1; then
-  brew install gcc make
+# Prerequisites: git, zsh, curl must be installed via system package manager
+for cmd in git zsh curl; do
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "[error] $cmd is required but not installed. Install it first:"
+    echo "  sudo apt install $cmd"
+    exit 1
+  fi
+done
+
+# Install mise
+echo "=== mise ==="
+if command -v mise >/dev/null 2>&1 || [ -x "$HOME/.local/bin/mise" ]; then
+  echo "[skip] mise already installed"
+else
+  echo "[info] Installing mise..."
+  curl https://mise.run | sh
+fi
+MISE="$HOME/.local/bin/mise"
+
+# Install tools via mise
+echo ""
+echo "=== Tools (via mise) ==="
+$MISE install neovim@latest fzf@latest fd@latest ripgrep@latest yazi@latest node@lts 2>&1
+$MISE use -g neovim@latest fzf@latest fd@latest ripgrep@latest yazi@latest node@lts 2>&1
+
+# Install tldr via npm
+echo ""
+echo "=== tldr ==="
+if command -v tldr >/dev/null 2>&1 || [ -x "$HOME/.local/share/mise/shims/tldr" ]; then
+  echo "[skip] tldr already installed"
+else
+  echo "[info] Installing tldr..."
+  export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:$PATH"
+  npm install -g tldr
 fi
 
-# fzf: use official git installer (works everywhere, includes shell integration)
-if ! command -v fzf >/dev/null 2>&1; then
-  echo "[info] Installing fzf..."
-  git clone --depth 1 https://github.com/junegunn/fzf.git ~/.local/share/fzf
-  ~/.local/share/fzf/install --bin
+# Install oh-my-zsh to XDG path
+echo ""
+echo "=== Oh My Zsh ==="
+OMZ_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/oh-my-zsh"
+if [ -d "$OMZ_DIR" ]; then
+  echo "[skip] oh-my-zsh already installed at $OMZ_DIR"
+else
+  echo "[info] Installing oh-my-zsh..."
+  ZSH="$OMZ_DIR" sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended --keep-zshrc
 fi
 
-# ripgrep: use musl static binary (no glibc dependency)
-if ! command -v rg >/dev/null 2>&1; then
-  echo "[info] Installing ripgrep..."
-  RG_VERSION=$(curl -s https://api.github.com/repos/BurntSushi/ripgrep/releases/latest | grep tag_name | cut -d '"' -f 4)
-  curl -Lo /tmp/rg.tar.gz "https://github.com/BurntSushi/ripgrep/releases/download/${RG_VERSION}/ripgrep-${RG_VERSION}-x86_64-unknown-linux-musl.tar.gz"
-  tar -xzf /tmp/rg.tar.gz -C /tmp
-  mkdir -p ~/.local/bin
-  mv /tmp/ripgrep-*/rg ~/.local/bin/
-  rm -rf /tmp/rg.tar.gz /tmp/ripgrep-*
-fi
-
-# fd: use musl static binary (no glibc dependency)
-if ! command -v fd >/dev/null 2>&1 && ! command -v fdfind >/dev/null 2>&1; then
-  echo "[info] Installing fd..."
-  FD_VERSION=$(curl -s https://api.github.com/repos/sharkdp/fd/releases/latest | grep tag_name | cut -d '"' -f 4)
-  curl -Lo /tmp/fd.tar.gz "https://github.com/sharkdp/fd/releases/download/${FD_VERSION}/fd-${FD_VERSION}-x86_64-unknown-linux-musl.tar.gz"
-  tar -xzf /tmp/fd.tar.gz -C /tmp
-  mkdir -p ~/.local/bin
-  mv /tmp/fd-*/fd ~/.local/bin/
-  rm -rf /tmp/fd.tar.gz /tmp/fd-*
-fi
+# Install oh-my-zsh custom plugins
+echo ""
+echo "=== Oh My Zsh Plugins ==="
+OMZ_CUSTOM="$OMZ_DIR/custom/plugins"
+declare -A plugins=(
+  [zsh-autosuggestions]="https://github.com/zsh-users/zsh-autosuggestions"
+  [zsh-syntax-highlighting]="https://github.com/zsh-users/zsh-syntax-highlighting"
+  [you-should-use]="https://github.com/MichaelAquilina/zsh-you-should-use"
+)
+for name in "${!plugins[@]}"; do
+  if [ -d "$OMZ_CUSTOM/$name" ]; then
+    echo "[skip] $name already installed"
+  else
+    echo "[info] Installing $name..."
+    git clone "${plugins[$name]}" "$OMZ_CUSTOM/$name"
+  fi
+done
 
 # Create ~/.config if needed
 mkdir -p ~/.config
+
+# Symlink zshrc
+echo ""
+echo "=== Symlinks ==="
+if [ -L ~/.zshrc ] || [ -e ~/.zshrc ]; then
+  echo "[skip] ~/.zshrc already exists"
+else
+  ln -s "$DOTFILES/zshrc" ~/.zshrc
+  echo "[done] Linked ~/.zshrc"
+fi
 
 # Symlink nvim
 if [ -L ~/.config/nvim ] || [ -e ~/.config/nvim ]; then
@@ -71,20 +107,14 @@ echo "=== Git Submodules ==="
 git -C "$DOTFILES" submodule update --init --recursive
 echo "[done] Submodules initialized"
 
-# Neovim plugins + Mason
+# Manual steps
 echo ""
-echo "=== Neovim ==="
-echo "Open nvim to auto-install lazy.nvim plugins and Mason packages."
-echo "  nvim"
+echo "=== Manual Steps ==="
+echo "1. Open nvim to auto-install lazy.nvim plugins and Mason packages:"
+echo "     nvim"
 echo ""
-
-# Tmux plugins
-echo "=== Tmux ==="
-echo "After starting tmux, install plugins with:"
-echo "  prefix + I  (Ctrl-a then Shift+I, since your config rebinds prefix)"
+echo "2. Start tmux and install plugins with TPM:"
+echo "     prefix + I  (Ctrl-a then Shift+I)"
 echo ""
-echo "On a fresh install where tmux.conf hasn't loaded yet, use:"
-echo "  Ctrl-b then Shift+I  (default tmux prefix)"
-echo ""
-echo "This fetches all plugins defined in tmux.conf via TPM."
-echo "You only need to do this once on a new machine."
+echo "3. Change default shell to zsh (if not already):"
+echo "     chsh -s \$(which zsh)"
