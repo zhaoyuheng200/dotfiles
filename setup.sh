@@ -8,7 +8,7 @@ echo "Source: $DOTFILES"
 echo ""
 
 # Prerequisites: git, zsh, curl must be installed via system package manager
-for cmd in git zsh curl; do
+for cmd in git zsh curl unzip; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
     echo "[error] $cmd is required but not installed. Install it first:"
     echo "  sudo apt install $cmd"
