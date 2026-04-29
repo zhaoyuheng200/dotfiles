@@ -44,7 +44,7 @@ autoload -Uz compinit && compinit
 
 # Auto-attach tmux on SSH
 if [[ $- =~ i ]] && [[ -z "$TMUX" ]] && [[ -n "$SSH_TTY" ]]; then
-  tmux attach-session || tmux new-session -s ssh_tmux
+  tmux new-session -A -s ssh_tmux
 fi
 
 # Tmux title prompt on new pane/window
