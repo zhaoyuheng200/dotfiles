@@ -47,9 +47,6 @@ if [[ $- =~ i ]] && [[ -z "$TMUX" ]] && [[ -n "$SSH_TTY" ]]; then
   tmux new-session -A -s ssh_tmux
 fi
 
-# Tmux title prompt on new pane/window
-[ -n "$TMUX" ] && [ -f ~/.config/tmux/tmux_title_prompt.sh ] && source ~/.config/tmux/tmux_title_prompt.sh
-
 # myip — show local IP and Tailscale hostname
 alias myip='echo "$(hostname -I | awk "{print \$1}") $(tailscale status --self --json 2>/dev/null | jq -r ".Self.DNSName" | sed "s/\.$//")"'
 
