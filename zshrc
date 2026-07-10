@@ -47,6 +47,11 @@ if [[ $- =~ i ]] && [[ -z "$TMUX" ]] && [[ -n "$SSH_TTY" ]]; then
   tmux new-session -A -s ssh_tmux
 fi
 
+# Kiro notification tty: kiro-cli blanks $TTY when it spawns hooks, so stash the
+# pane's tty under a name it leaves untouched. Used by ~/.kiro/hooks/notify-*.sh
+# to write SetUserVar notifications back to the local WezTerm over tmux passthrough.
+export KIRO_NOTIFY_TTY="$TTY"
+
 # myip — show local IP and Tailscale hostname
 alias myip='echo "$(hostname -I | awk "{print \$1}") $(tailscale status --self --json 2>/dev/null | jq -r ".Self.DNSName" | sed "s/\.$//")"'
 

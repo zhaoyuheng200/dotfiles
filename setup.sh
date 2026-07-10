@@ -58,17 +58,17 @@ fi
 echo ""
 echo "=== Oh My Zsh Plugins ==="
 OMZ_CUSTOM="$OMZ_DIR/custom/plugins"
-declare -A plugins=(
-  [zsh-autosuggestions]="https://github.com/zsh-users/zsh-autosuggestions"
-  [zsh-syntax-highlighting]="https://github.com/zsh-users/zsh-syntax-highlighting"
-  [you-should-use]="https://github.com/MichaelAquilina/zsh-you-should-use"
-)
-for name in "${!plugins[@]}"; do
+for entry in \
+  "zsh-autosuggestions=https://github.com/zsh-users/zsh-autosuggestions" \
+  "zsh-syntax-highlighting=https://github.com/zsh-users/zsh-syntax-highlighting" \
+  "you-should-use=https://github.com/MichaelAquilina/zsh-you-should-use"; do
+  name="${entry%%=*}"
+  url="${entry#*=}"
   if [ -d "$OMZ_CUSTOM/$name" ]; then
     echo "[skip] $name already installed"
   else
     echo "[info] Installing $name..."
-    git clone "${plugins[$name]}" "$OMZ_CUSTOM/$name"
+    git clone "$url" "$OMZ_CUSTOM/$name"
   fi
 done
 
@@ -101,6 +101,14 @@ else
   echo "[done] Linked ~/.config/tmux"
 fi
 
+# Symlink wezterm
+if [ -L ~/.config/wezterm ] || [ -e ~/.config/wezterm ]; then
+  echo "[skip] ~/.config/wezterm already exists"
+else
+  ln -s "$DOTFILES/wezterm" ~/.config/wezterm
+  echo "[done] Linked ~/.config/wezterm"
+fi
+
 # Init git submodules (TPM)
 echo ""
 echo "=== Git Submodules ==="
@@ -118,3 +126,10 @@ echo "     prefix + I  (Ctrl-a then Shift+I)"
 echo ""
 echo "3. Change default shell to zsh (if not already):"
 echo "     chsh -s \$(which zsh)"
+echo ""
+echo "4. (Cloud desktop / Kiro only) Link the Kiro notification hooks:"
+echo "     mkdir -p ~/.kiro/hooks"
+echo "     ln -sf $DOTFILES/kiro/hooks/notify-done.sh  ~/.kiro/hooks/notify-done.sh"
+echo "     ln -sf $DOTFILES/kiro/hooks/notify-start.sh ~/.kiro/hooks/notify-start.sh"
+echo "   Then wire them in your Kiro agent (stop -> notify-done, userPromptSubmit -> notify-start)."
+echo "   Requires 'set -g allow-passthrough on' in tmux and the WezTerm user-var-changed handler."
