@@ -1,0 +1,24 @@
+// Global markdownlint defaults, passed to markdownlint-cli2 as the base
+// configuration by lua/plugins/markdownlint.lua.
+//
+// A project may still override any of this with its own .markdownlint.jsonc
+// (or .markdownlint-cli2.jsonc) in the repo root; the project config wins.
+{
+  // Prettier formats markdown with proseWrap: "preserve", so it never reflows
+  // prose to fit a column. An 80-char limit therefore only reports problems
+  // nothing can fix. Keep a loose guardrail, and skip the constructs that
+  // can't be wrapped without changing their meaning.
+  "MD013": {
+    "line_length": 120,
+    "code_blocks": false,
+    "tables": false,
+    "headings": false
+  },
+
+  // Table column style. Tables here are written with compact body rows
+  // (| a | b |) but a tight delimiter row (|---|---|). markdownlint has no
+  // style for that combination, so it reports every pipe in the delimiter
+  // row, and --fix cannot repair it. Prettier would, by realigning every
+  // table, but that is a large whitespace-only churn for no gain.
+  "MD060": false
+}
