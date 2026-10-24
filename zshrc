@@ -42,9 +42,16 @@ eval "$(~/.local/bin/mise activate zsh)"
 source <(fzf --zsh)
 autoload -Uz compinit && compinit
 
-# Auto-attach tmux on SSH
+# Auto-attach tmux on SSH — attach to the last-attached session, or create "chat" if none exist
+# (plain `tmux attach` skips sessions already attached elsewhere and picks by output activity)
 if [[ $- =~ i ]] && [[ -z "$TMUX" ]] && [[ -n "$SSH_TTY" ]]; then
-  tmux new-session -A -s ssh_tmux
+  _tmux_last=$(tmux ls -F '#{session_last_attached} #{session_name}' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
+  if [[ -n "$_tmux_last" ]]; then
+    tmux attach -t "=$_tmux_last"
+  else
+    tmux new-session -A -s chat
+  fi
+  unset _tmux_last
 fi
 
 # Kiro notification tty: kiro-cli blanks $TTY when it spawns hooks, so stash the
